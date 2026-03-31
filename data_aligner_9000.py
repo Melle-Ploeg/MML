@@ -33,34 +33,6 @@ def align_features(sample_dict:dict, time_dict:dict):
     # print(result[:,5])
     return result
 
-def stress_F_Labels(sample_dict:dict, time_dict:dict):
-    length = len(time_dict["HR"])
-    result = np.zeros(length)
-    set_number = 0
-    next_tag = 2
-    #label = 0
-    sample_dict["tags"] += [0]
-    for i in range(length):
-        if i == sample_dict["tags"][next_tag]:
-            set_number = (next_tag) * ((next_tag+1) % 2) #Multiplied by 0 if inbetween two sets
-            next_tag += 1
-        result[i] = int(set_number/2)
-    return result
-
-def stress_S_Labels(sample_dict:dict, time_dict:dict):
-    length = len(time_dict["HR"])
-    result = np.zeros(length)
-    set_number = 0
-    next_tag = 3
-    #label = 0
-    sample_dict["tags"][13] = 0
-    for i in range(length):
-        if i == sample_dict["tags"][next_tag]:
-            set_number = (next_tag-2) * ((next_tag) % 2)
-            next_tag += 1
-        result[i] = int((set_number+1)/2)#int(set_number/2)
-    return result
-
 # Find the value of sample data b that is nearest to the time of sample a
 def find_nearest_point(a_time, b_sample, b_times):
     idx = (np.abs(b_times - a_time)).argmin()
@@ -93,6 +65,50 @@ def get_features():
 
     return signal_data, time_data, fs_dict, participants
 
+def stress_Labels(sample_dict:dict, time_dict:dict):
+    result = {}
+    bad_keys = ['f07', "f14_a", "f14_b"]
+    for subject in sample_dict.keys():
+        if subject not in bad_keys: 
+            print(subject)
+            current_dict = sample_dict[subject]
+            length = len(time_dict[subject]["HR"])
+            new_array = np.zeros(length)
+            set_number = 0
+            if 'S' in subject:
+                next_tag = 3
+                #label = 0
+                current_dict["tags"][13] = 0
+                for i in range(length):
+                    if i == current_dict["tags"][next_tag]:
+                        set_number = (next_tag-2) * ((next_tag) % 2)
+                        next_tag += 1
+                    new_array[i] = int((set_number+1)/2)#int(set_number/2)
+            else:
+                next_tag = 2
+                #label = 0
+                current_dict["tags"] += [0]
+                for i in range(length):
+                    if i == current_dict["tags"][next_tag]:
+                        set_number = (next_tag) * ((next_tag+1) % 2) #Multiplied by 0 if inbetween two sets
+                        next_tag += 1
+                    new_array[i] = int(set_number/2)
+            result[subject] = new_array
+    return result
+
+def stress_S_Labels(sample_dict:dict, time_dict:dict):
+    length = len(time_dict["HR"])
+    result = np.zeros(length)
+    set_number = 0
+    next_tag = 3
+    #label = 0
+    sample_dict["tags"][13] = 0
+    for i in range(length):
+        if i == sample_dict["tags"][next_tag]:
+            set_number = (next_tag-2) * ((next_tag) % 2)
+            next_tag += 1
+        result[i] = int((set_number+1)/2)#int(set_number/2)
+    return result
 
 def label_aerobic(aligned_data, sample_dict):
     result = {}
@@ -138,7 +154,7 @@ def align_all(sample_dict, time_dict):
 signal_data, time_data, fs_dict, participants = get_features()
 fs_dict = fs_dict['AEROBIC']['f01'] # Sampling frequencies are the same for every experiment so we simplify the dict
 features = align_features(signal_data['STRESS']['S01'], time_data['STRESS']['S01'])
-labels = stress_S_Labels(signal_data['STRESS']['S01'], time_data['STRESS']['S01'])
+labels = stress_Labels(signal_data['STRESS'], time_data['STRESS'])
 with np.printoptions(edgeitems=4000):
     print(labels)
 
