@@ -1,4 +1,4 @@
-import torch
+#import torch
 import test
 import os
 import numpy as np
@@ -6,17 +6,16 @@ import time
 
 # Take the data and time dictionaries for a single sample or experiment, and resample to align with the lowest sampled data (HR)
 def align_features(sample_dict:dict, time_dict:dict):
-    features = ['EDA', 'BVP', 'TEMP', 'ACC']  # Features to align, without HR
+    features = ['HR', 'EDA', 'EDA_std', 'BVP', 'TEMP', 'ACC', 'ACC_std']  # Features to align
     time_array = time_dict['HR']
     length = len(time_array)    # Scale everything to the length of the HR array
-    result = np.zeros((length, len(features) + 3))      # Create empty feature matrix, with one column for each feature
+    result = np.zeros((length, len(features)))      # Create empty feature matrix, with one column for each feature
     result[:,0:1] = sample_dict['HR']
     sample_dict['ACCB'] = (abs(sample_dict['ACC'][:,0]) + abs(sample_dict['ACC'][:,1]) + abs(sample_dict['ACC'][:,2])) / 3
     time_dict['ACCB'] = time_dict['ACC']
     # Main loop creating the feature matrix. Yes the code is ugly.
     start = time.time()
-    label = 2
-    print(sample_dict["tags"])
+    #print(sample_dict["tags"])
     for i in range(length):
         result[i][1] = find_avg(time_array[i], np.ravel(sample_dict['EDA']), np.ravel(time_dict['EDA']), 4)
         result[i][2] = find_std(time_array[i], np.ravel(sample_dict['EDA']), np.ravel(time_dict['EDA']), 4)
@@ -27,7 +26,7 @@ def align_features(sample_dict:dict, time_dict:dict):
         result[i][6] = find_std(time_array[i], np.ravel(sample_dict['ACCB']), np.ravel(time_dict['ACCB']), 64)
 
 
-    print(time.time() - start)
+    #print(time.time() - start)
     # print(result[:,4])
     # print(result[:,4].shape)
     # print(result[:,5])
@@ -65,9 +64,8 @@ def get_features():
 
     return signal_data, time_data, fs_dict, participants
 
-def stress_Labels(sample_dict:dict, time_dict:dict):
+def label_stress(sample_dict:dict, time_dict:dict, bad_keys=['f07', "f14_a", "f14_b"]):
     result = {}
-    bad_keys = ['f07', "f14_a", "f14_b"]
     for subject in sample_dict.keys():
         if subject not in bad_keys:
             current_dict = sample_dict[subject]
@@ -77,12 +75,12 @@ def stress_Labels(sample_dict:dict, time_dict:dict):
             if 'S' in subject:
                 next_tag = 3
                 #label = 0
-                current_dict["tags"][13] = 0
+                #current_dict["tags"][13] = 0
                 for i in range(length):
                     if i == current_dict["tags"][next_tag]:
                         #set_number = (next_tag-2) * ((next_tag) % 2)
-                        set_number = next_tag % 2
-                        next_tag += 1
+                        set_number = next_tag % 2 #1 if during test, otherwise 0
+                        if i != current_dict["tags"][13]: next_tag += 1
                     new_array[i] = int((set_number+1)/2)#int(set_number/2)
             else:
                 next_tag = 2
@@ -91,29 +89,28 @@ def stress_Labels(sample_dict:dict, time_dict:dict):
                 for i in range(length):
                     if i == current_dict["tags"][next_tag]:
                         # set_number = (next_tag) * ((next_tag+1) % 2) #Multiplied by 0 if inbetween two sets
-                        set_number = next_tag+1 % 2 #Multiplied by 0 if inbetween two sets
+                        set_number = next_tag+1 % 2 #1 if during test, otherwise 0
                         next_tag += 1
                     new_array[i] = int(set_number/2)
             result[subject] = new_array
     return result
 
-def stress_S_Labels(sample_dict:dict, time_dict:dict):
-    length = len(time_dict["HR"])
-    result = np.zeros(length)
-    set_number = 0
-    next_tag = 3
-    #label = 0
-    sample_dict["tags"][13] = 0
-    for i in range(length):
-        if i == sample_dict["tags"][next_tag]:
-            set_number = (next_tag-2) * ((next_tag) % 2)
-            next_tag += 1
-        result[i] = int((set_number+1)/2)#int(set_number/2)
-    return result
+# def stress_S_Labels(sample_dict:dict, time_dict:dict):
+#     length = len(time_dict["HR"])
+#     result = np.zeros(length)
+#     set_number = 0
+#     next_tag = 3
+#     #label = 0
+#     sample_dict["tags"][13] = 0
+#     for i in range(length):
+#         if i == sample_dict["tags"][next_tag]:
+#             set_number = (next_tag-2) * ((next_tag) % 2)
+#             next_tag += 1
+#         result[i] = int((set_number+1)/2)#int(set_number/2)
+#     return result
 
-def label_aerobic(aligned_data, sample_dict):
+def label_aerobic(aligned_data, sample_dict, bad_keys=['S03', 'S07', 'S11_a', 'S11_b', 'S12']):
     result = {}
-    bad_keys = ['S03', 'S07', 'S11_a', 'S11_b', 'S12']
     for subject in aligned_data.keys():
         if not subject in bad_keys:
             labels = np.zeros(len(aligned_data[subject][:,0]))
@@ -123,12 +120,10 @@ def label_aerobic(aligned_data, sample_dict):
     return result
 
 
-def label_anaerobic(aligned_data, sample_dict):
+def label_anaerobic(aligned_data, sample_dict, bad_keys=['S06', 'S16_a', 'S16_b']):
     result = {}
-    bad_keys = ['S06', 'S16_a', 'S16_b']
     for subject in aligned_data.keys():
         if not subject in bad_keys:
-            print(subject)
             labels = np.zeros(len(aligned_data[subject][:, 0]))
             tags = sample_dict[subject]['tags']
             if 'S' in subject:
@@ -152,21 +147,29 @@ def align_all(sample_dict, time_dict):
     return result
 
 
-signal_data, time_data, fs_dict, participants = get_features()
-fs_dict = fs_dict['AEROBIC']['f01'] # Sampling frequencies are the same for every experiment so we simplify the dict
-features = align_features(signal_data['STRESS']['S01'], time_data['STRESS']['S01'])
-labels = stress_Labels(signal_data['STRESS'], time_data['STRESS'])
-with np.printoptions(edgeitems=4000):
-    print(labels)
+# signal_data, time_data, fs_dict, participants = get_features()
+# fs_dict = fs_dict['AEROBIC']['f01'] # Sampling frequencies are the same for every experiment so we simplify the dict
+# #TODO TEMPRARY CODE VERY TEMPORATY
+
+# subject = "S01"
+
+# features = align_features(signal_data['STRESS'][subject], time_data['STRESS'][subject])
+# labels = label_stress(signal_data['STRESS'], time_data['STRESS'])[subject]
+
+
+# print(features.shape)
+# print(labels.shape)
+# with np.printoptions(edgeitems=4000):
+#     print(labels)
 
 # print(features.shape)
 # print(features)
-np.set_printoptions(threshold=np.inf)
-test_dict = {'f01':features}
-print(label_anaerobic(test_dict, signal_data['ANAEROBIC'])['f01'])
+#np.set_printoptions(threshold=np.inf)
+#test_dict = {'f01':features}
+# print(label_anaerobic(test_dict, signal_data['ANAEROBIC'])['f01'])
 
-for s in signal_data['ANAEROBIC'].keys():
-    print(s)
-    print(len(signal_data['ANAEROBIC'][s]['tags']))
+# for s in signal_data['ANAEROBIC'].keys():
+#     print(s)
+#     print(len(signal_data['ANAEROBIC'][s]['tags']))
 
 
