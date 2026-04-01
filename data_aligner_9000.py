@@ -63,6 +63,21 @@ def get_features():
 
     return signal_data, time_data, fs_dict, participants
 
+# def stress_S_Labels(sample_dict:dict, time_dict:dict):
+#     length = len(time_dict["HR"])
+#     result = np.zeros(length)
+#     set_number = 0
+#     next_tag = 3
+#     #label = 0
+#     sample_dict["tags"][13] = 0
+#     for i in range(length):
+#         if i == sample_dict["tags"][next_tag]:
+#             set_number = (next_tag-2) * ((next_tag) % 2)
+#             next_tag += 1
+#         result[i] = int((set_number+1)/2)#int(set_number/2)
+#     return result
+
+
 def label_stress(sample_dict:dict, time_dict:dict, bad_keys=['f07', "f14_a", "f14_b"]):
     result = {}
     for subject in sample_dict.keys():
@@ -94,36 +109,23 @@ def label_stress(sample_dict:dict, time_dict:dict, bad_keys=['f07', "f14_a", "f1
             result[subject] = new_array
     return result
 
-# def stress_S_Labels(sample_dict:dict, time_dict:dict):
-#     length = len(time_dict["HR"])
-#     result = np.zeros(length)
-#     set_number = 0
-#     next_tag = 3
-#     #label = 0
-#     sample_dict["tags"][13] = 0
-#     for i in range(length):
-#         if i == sample_dict["tags"][next_tag]:
-#             set_number = (next_tag-2) * ((next_tag) % 2)
-#             next_tag += 1
-#         result[i] = int((set_number+1)/2)#int(set_number/2)
-#     return result
-
-def label_aerobic(aligned_data, sample_dict, bad_keys=['S03', 'S07', 'S11_a', 'S11_b', 'S12']):
+def label_aerobic(sample_dict:dict, time_dict:dict, bad_keys=['S03', 'S07', 'S11_a', 'S11_b', 'S12']):
     result = {}
-    for subject in aligned_data.keys():
+    for subject in sample_dict.keys():
         if not subject in bad_keys:
-            labels = np.zeros(len(aligned_data[subject][:,0]))
+            #print(aligned_data[subject])
+            labels = np.zeros(len(time_dict[subject]["HR"]))
             tags = sample_dict[subject]['tags']
             labels[tags[1]:tags[-2]] = 2
             result[subject] = labels
     return result
 
 
-def label_anaerobic(aligned_data, sample_dict, bad_keys=['S06', 'S16_a', 'S16_b']):
+def label_anaerobic(sample_dict, time_dict, bad_keys=['S06', 'S16_a', 'S16_b']):
     result = {}
-    for subject in aligned_data.keys():
+    for subject in sample_dict.keys():
         if not subject in bad_keys:
-            labels = np.zeros(len(aligned_data[subject][:, 0]))
+            labels = np.zeros(len(time_dict[subject]["HR"]))
             tags = sample_dict[subject]['tags']
             if 'S' in subject:
                 # Three tests
@@ -145,6 +147,45 @@ def label_anaerobic(aligned_data, sample_dict, bad_keys=['S06', 'S16_a', 'S16_b'
                     labels[start:end] = 2
                     result[subject] = labels
     return result
+
+# def label_aerobic(aligned_data, sample_dict, bad_keys=['S03', 'S07', 'S11_a', 'S11_b', 'S12']):
+#     result = {}
+#     for subject in aligned_data.keys():
+#         if not subject in bad_keys:
+#             #print(aligned_data[subject])
+#             labels = np.zeros(len(aligned_data[subject][:,0]))
+#             tags = sample_dict[subject]['tags']
+#             labels[tags[1]:tags[-2]] = 2
+#             result[subject] = labels
+#     return result
+
+
+# def label_anaerobic(aligned_data, sample_dict, bad_keys=['S06', 'S16_a', 'S16_b']):
+#     result = {}
+#     for subject in aligned_data.keys():
+#         if not subject in bad_keys:
+#             labels = np.zeros(len(aligned_data[subject][:, 0]))
+#             tags = sample_dict[subject]['tags']
+#             if 'S' in subject:
+#                 # Three tests
+#                 for i in range(0, 6, 2):
+#                     start, end = tags[i], tags[i + 1]
+#                     labels[start:end] = 3
+#                     # Label the periods in between and after aerobic bursts as anaerobic, as there is slow easy peddling
+#                     start, end = tags[i + 1], tags[i + 2]
+#                     labels[start:end] = 2
+#                     result[subject] = labels
+
+#             else:
+#                 # Four tests
+#                 for i in range(2, 10, 2):
+#                     start, end = tags[i], tags[i + 1]
+#                     labels[start:end] = 3
+#                     # Label the periods in between and after aerobic bursts as anaerobic, as there is slow easy peddling
+#                     start, end = tags[i + 1], tags[i + 2]
+#                     labels[start:end] = 2
+#                     result[subject] = labels
+#     return result
 
 def align_all(sample_dict, time_dict):
     result = {}
