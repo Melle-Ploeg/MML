@@ -66,26 +66,27 @@ def generate_samples():
 
 signal_data, time_data, fs_dict, participants = get_features()
 
+
 print("stress")
 bad_keys = ['f07', "f14_a", "f14_b"]
 labels = label_stress(signal_data['STRESS'], time_data['STRESS'], bad_keys)
 
-print("anareoic")
-bad_keys = ['S06', 'S16_a', 'S16_b']
-labels = label_anaerobic(signal_data['ANAEROBIC'], time_data['ANAEROBIC'], bad_keys)
-
 print("aerosbic")
 bad_keys = ['S03', 'S07', 'S11_a', 'S11_b', 'S12']
 labels = label_aerobic(signal_data['AEROBIC'], time_data['AEROBIC'], bad_keys)
+
+print("anareoic")
+bad_keys = ['S06', 'S16_a', 'S16_b']
+labels = label_anaerobic(signal_data['ANAEROBIC'], time_data['ANAEROBIC'], bad_keys)
 
 
 
 samples = generate_samples()
 
 print(samples)
-print(samples[int(np.random.uniform[0, len(samples)])])
-print(samples[int(np.random.uniform[0, len(samples)])])
-print(samples[int(np.random.uniform[0, len(samples)])])
-print(samples[int(np.random.uniform[0, len(samples)])])
-print(samples[int(np.random.uniform[0, len(samples)])])
-print(samples[int(np.random.uniform[0, len(samples)])])
+print(samples[int(np.random.uniform(0, len(samples)))])
+print(samples[int(np.random.uniform(0, len(samples)))])
+print(samples[int(np.random.uniform(0, len(samples)))])
+print(samples[int(np.random.uniform(0, len(samples)))])
+print(samples[int(np.random.uniform(0, len(samples)))])
+print(samples[int(np.random.uniform(0, len(samples)))])
