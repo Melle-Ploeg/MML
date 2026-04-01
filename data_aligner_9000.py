@@ -15,7 +15,6 @@ def align_features(sample_dict:dict, time_dict:dict):
     time_dict['ACCB'] = time_dict['ACC']
     # Main loop creating the feature matrix. Yes the code is ugly.
     start = time.time()
-    #print(sample_dict["tags"])
     for i in range(length):
         result[i][1] = find_avg(time_array[i], np.ravel(sample_dict['EDA']), np.ravel(time_dict['EDA']), 4)
         result[i][2] = find_std(time_array[i], np.ravel(sample_dict['EDA']), np.ravel(time_dict['EDA']), 4)
@@ -115,7 +114,7 @@ def label_aerobic(aligned_data, sample_dict, bad_keys=['S03', 'S07', 'S11_a', 'S
         if not subject in bad_keys:
             labels = np.zeros(len(aligned_data[subject][:,0]))
             tags = sample_dict[subject]['tags']
-            labels[tags[1]:tags[-2]] = 1
+            labels[tags[1]:tags[-2]] = 2
             result[subject] = labels
     return result
 
@@ -130,13 +129,20 @@ def label_anaerobic(aligned_data, sample_dict, bad_keys=['S06', 'S16_a', 'S16_b'
                 # Three tests
                 for i in range(0, 6, 2):
                     start, end = tags[i], tags[i + 1]
-                    labels[start:end] = 1
+                    labels[start:end] = 3
+                    # Label the periods in between and after aerobic bursts as anaerobic, as there is slow easy peddling
+                    start, end = tags[i + 1], tags[i + 2]
+                    labels[start:end] = 2
                     result[subject] = labels
+
             else:
                 # Four tests
                 for i in range(2, 10, 2):
                     start, end = tags[i], tags[i + 1]
-                    labels[start:end] = 1
+                    labels[start:end] = 3
+                    # Label the periods in between and after aerobic bursts as anaerobic, as there is slow easy peddling
+                    start, end = tags[i + 1], tags[i + 2]
+                    labels[start:end] = 2
                     result[subject] = labels
     return result
 
@@ -164,6 +170,7 @@ def align_all(sample_dict, time_dict):
 
 # print(features.shape)
 # print(features)
+
 #np.set_printoptions(threshold=np.inf)
 #test_dict = {'f01':features}
 # print(label_anaerobic(test_dict, signal_data['ANAEROBIC'])['f01'])
@@ -171,5 +178,3 @@ def align_all(sample_dict, time_dict):
 # for s in signal_data['ANAEROBIC'].keys():
 #     print(s)
 #     print(len(signal_data['ANAEROBIC'][s]['tags']))
-
-
