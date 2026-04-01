@@ -69,8 +69,7 @@ def stress_Labels(sample_dict:dict, time_dict:dict):
     result = {}
     bad_keys = ['f07', "f14_a", "f14_b"]
     for subject in sample_dict.keys():
-        if subject not in bad_keys: 
-            print(subject)
+        if subject not in bad_keys:
             current_dict = sample_dict[subject]
             length = len(time_dict[subject]["HR"])
             new_array = np.zeros(length)
@@ -81,7 +80,8 @@ def stress_Labels(sample_dict:dict, time_dict:dict):
                 current_dict["tags"][13] = 0
                 for i in range(length):
                     if i == current_dict["tags"][next_tag]:
-                        set_number = (next_tag-2) * ((next_tag) % 2)
+                        #set_number = (next_tag-2) * ((next_tag) % 2)
+                        set_number = next_tag % 2
                         next_tag += 1
                     new_array[i] = int((set_number+1)/2)#int(set_number/2)
             else:
@@ -90,7 +90,8 @@ def stress_Labels(sample_dict:dict, time_dict:dict):
                 current_dict["tags"] += [0]
                 for i in range(length):
                     if i == current_dict["tags"][next_tag]:
-                        set_number = (next_tag) * ((next_tag+1) % 2) #Multiplied by 0 if inbetween two sets
+                        # set_number = (next_tag) * ((next_tag+1) % 2) #Multiplied by 0 if inbetween two sets
+                        set_number = next_tag+1 % 2 #Multiplied by 0 if inbetween two sets
                         next_tag += 1
                     new_array[i] = int(set_number/2)
             result[subject] = new_array
