@@ -84,7 +84,7 @@ def store_samples(samples, sample_length, features):
         label_matrix[i] = samples[i][1]
 
     np.save("processed_data/features", feature_matrix, allow_pickle=False)
-    np.save("processed_data/labels", feature_matrix, allow_pickle=False)
+    np.save("processed_data/labels", label_matrix, allow_pickle=False)
 
 # signal_data, time_data, fs_dict, participants = get_features()
 #
