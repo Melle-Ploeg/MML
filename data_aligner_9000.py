@@ -1,4 +1,4 @@
-#import torch
+import torch
 import test
 import os
 import numpy as np
@@ -25,7 +25,7 @@ def align_features(sample_dict:dict, time_dict:dict):
         result[i][6] = find_std(time_array[i], np.ravel(sample_dict['ACCB']), np.ravel(time_dict['ACCB']), 64)
 
 
-    #print(time.time() - start)
+    print(time.time() - start)
     # print(result[:,4])
     # print(result[:,4].shape)
     # print(result[:,5])
@@ -116,7 +116,7 @@ def label_aerobic(sample_dict:dict, time_dict:dict, bad_keys=['S03', 'S07', 'S11
             #print(aligned_data[subject])
             labels = np.zeros(len(time_dict[subject]["HR"]))
             tags = sample_dict[subject]['tags']
-            labels[tags[1]:tags[-2]] = 2
+            labels[tags[1]:tags[-1]] = 2
             result[subject] = labels
     return result
 
@@ -129,7 +129,7 @@ def label_anaerobic(sample_dict, time_dict, bad_keys=['S06', 'S16_a', 'S16_b']):
             tags = sample_dict[subject]['tags']
             if 'S' in subject:
                 # Three tests
-                for i in range(0, 6, 2):
+                for i in range(1, 6, 2):
                     start, end = tags[i], tags[i + 1]
                     labels[start:end] = 3
                     # Label the periods in between and after aerobic bursts as anaerobic, as there is slow easy peddling
@@ -139,6 +139,8 @@ def label_anaerobic(sample_dict, time_dict, bad_keys=['S06', 'S16_a', 'S16_b']):
 
             else:
                 # Four tests
+                start, end = tags[1], tags[2]
+                labels[start:end] = 2
                 for i in range(2, 10, 2):
                     start, end = tags[i], tags[i + 1]
                     labels[start:end] = 3
@@ -196,7 +198,16 @@ def align_all(sample_dict, time_dict):
 
 # signal_data, time_data, fs_dict, participants = get_features()
 # fs_dict = fs_dict['AEROBIC']['f01'] # Sampling frequencies are the same for every experiment so we simplify the dict
-# #TODO TEMPRARY CODE VERY TEMPORATY
+#
+# print(signal_data['AEROBIC']['f02']['tags'])
+# print(len(signal_data['AEROBIC']['f02']['HR']))
+# print(signal_data['AEROBIC']['f07']['tags'])
+# print(len(signal_data['AEROBIC']['f07']['HR']))
+# print(signal_data['AEROBIC']['f11']['tags'])
+# print(len(signal_data['AEROBIC']['f11']['HR']))
+# print(signal_data['AEROBIC']['f03']['tags'])
+# print(len(signal_data['AEROBIC']['f03']['HR']))
+#TODO TEMPRARY CODE VERY TEMPORATY
 
 # subject = "S01"
 
@@ -218,4 +229,4 @@ def align_all(sample_dict, time_dict):
 
 # for s in signal_data['ANAEROBIC'].keys():
 #     print(s)
-#     print(len(signal_data['ANAEROBIC'][s]['tags']))
+#     print(signal_data['ANAEROBIC'][s]['tags'])
