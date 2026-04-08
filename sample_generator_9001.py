@@ -41,7 +41,6 @@ def generate_samples():
 
         for subject in keys:
             if subject in bad_keys: continue
-            indices = []
             features = align_features(signal_data[method][subject], time_data[method][subject])
             print(subject)
             if   method == "STRESS":  
@@ -83,7 +82,14 @@ def generate_samples():
                 sample_features = features[i_int:i_int+500]
                 if sample_features.shape[0] != 500:
                     print(method, subject, i)     #For when something goes wrong
-                sample_labels = labels[subject][i_int:i_int+500]
+                
+                sample_labels = np.zeros((500, 4))
+                for j in range(500):
+                    #print(labels[subject][i_int + j])
+                    sample_labels[j][int(labels[subject][i_int + j])] = 1
+
+                #sample_labels = labels[subject][i_int:i_int+500]
+
                 if subject in test_keys:
                     test_samples.append((sample_features, sample_labels))
                 elif subject in val_keys:
@@ -92,11 +98,11 @@ def generate_samples():
                     train_samples.append((sample_features, sample_labels))
     return train_samples, test_samples, val_samples
 
-def store_samples(samples, sample_length, features, addition=""):
+def store_samples(samples, sample_length, features, classes, addition=""):
     print('Writing ', len(samples), ' samples')
 
     feature_matrix = np.empty((len(samples), sample_length, features))
-    label_matrix = np.empty((len(samples), sample_length))
+    label_matrix = np.empty((len(samples), sample_length, classes))
 
     for i in range(len(samples)):
         feature_matrix[i] = samples[i][0]
@@ -123,9 +129,9 @@ def store_samples(samples, sample_length, features, addition=""):
 
 
 train_samples, test_samples, val_samples = generate_samples()
-store_samples(train_samples, 500, 7, "_train")
-store_samples(test_samples, 500, 7, "_test")
-store_samples(val_samples, 500, 7, "_val")
+store_samples(train_samples, 500, 7, 4, "_train")
+store_samples(test_samples, 500, 7, 4, "_test")
+store_samples(val_samples, 500, 7, 4, "_val")
 
 # print(samples[int(np.random.uniform(0, len(samples)))])
 # print(samples[int(np.random.uniform(0, len(samples)))])
