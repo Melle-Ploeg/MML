@@ -8,12 +8,16 @@ from data_aligner_9000 import align_features, align_all, label_stress, label_aer
 
 # Returns array of tuples: each tuple is a block, with first element matrix of features and second a vector of labels
 def generate_samples():
+    random.seed(234567)
     signal_data, time_data, fs_dict, participants = get_features()
     fs_dict = fs_dict['AEROBIC']['f01'] # Sampling frequencies are the same for every experiment so we simplify the dict
 
-    samples = []
+    train_samples = []
+    test_samples = []
+    val_samples = []
     for method in ["STRESS", "AEROBIC", "ANAEROBIC"]:
         print(method)
+        keys = signal_data[method].keys()
         if   method == "STRESS":
             bad_keys = ['f07', "f14_a", "f14_b"]
             labels = label_stress(signal_data['STRESS'], time_data['STRESS'], bad_keys)
@@ -24,8 +28,18 @@ def generate_samples():
         else:
             bad_keys = ['S06', 'S16_a', 'S16_b']
             labels = label_anaerobic(signal_data['ANAEROBIC'], time_data['ANAEROBIC'], bad_keys)
+        
+        keys = list(filter(lambda k: k not in bad_keys, keys))
 
-        for subject in signal_data[method].keys():
+        f_keys = list(filter(lambda k: "S" not in k, keys))
+        S_keys = list(filter(lambda k: "S" in k, keys))
+
+        test_val_f = random.sample(f_keys, 4)
+        test_val_S = random.sample(S_keys, 4)
+        test_keys = [test_val_f[0], test_val_f[1], test_val_S[0], test_val_S[1]]
+        val_keys = [test_val_f[2], test_val_f[3], test_val_S[2], test_val_S[3]]
+
+        for subject in keys:
             if subject in bad_keys: continue
             indices = []
             features = align_features(signal_data[method][subject], time_data[method][subject])
@@ -70,10 +84,15 @@ def generate_samples():
                 if sample_features.shape[0] != 500:
                     print(method, subject, i)     #For when something goes wrong
                 sample_labels = labels[subject][i_int:i_int+500]
-                samples.append((sample_features, sample_labels))
-    return samples
+                if subject in test_keys:
+                    test_samples.append((sample_features, sample_labels))
+                elif subject in val_keys:
+                    val_samples.append((sample_features, sample_labels))
+                else:
+                    train_samples.append((sample_features, sample_labels))
+    return train_samples, test_samples, val_samples
 
-def store_samples(samples, sample_length, features):
+def store_samples(samples, sample_length, features, addition=""):
     print('Writing ', len(samples), ' samples')
 
     feature_matrix = np.empty((len(samples), sample_length, features))
@@ -83,8 +102,8 @@ def store_samples(samples, sample_length, features):
         feature_matrix[i] = samples[i][0]
         label_matrix[i] = samples[i][1]
 
-    np.save("processed_data/features", feature_matrix, allow_pickle=False)
-    np.save("processed_data/labels", label_matrix, allow_pickle=False)
+    np.save("processed_data/features" + addition, feature_matrix, allow_pickle=False)
+    np.save("processed_data/labels" + addition, label_matrix, allow_pickle=False)
 
 # signal_data, time_data, fs_dict, participants = get_features()
 #
@@ -103,8 +122,10 @@ def store_samples(samples, sample_length, features):
 
 
 
-samples = generate_samples()
-store_samples(samples, 500, 7)
+train_samples, test_samples, val_samples = generate_samples()
+store_samples(train_samples, 500, 7, "_train")
+store_samples(test_samples, 500, 7, "_test")
+store_samples(val_samples, 500, 7, "_val")
 
 # print(samples[int(np.random.uniform(0, len(samples)))])
 # print(samples[int(np.random.uniform(0, len(samples)))])

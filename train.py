@@ -23,10 +23,10 @@ class LSTMClassifier(nn.Module):
 
 # Take a matrix of all the labeled input data
 def train(X, y):
-    X = torch.tensor(X, dtype=torch.float32)
-    y = torch.tensor(y)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2)
+    X_train = torch.tensor(X, dtype=torch.float32)
+    y_train = torch.tensor(y)
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    # X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2)
 
     seq_length = X_train.shape[2]
     output_size = 2
@@ -54,8 +54,8 @@ def train(X, y):
         optimizer.step()
         print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item()}')
 
-features = np.load('processed_data/features.npy')
-labels = np.load('processed_data/labels.npy')
+features = np.load('processed_data/features_train.npy')
+labels = np.load('processed_data/labels_train.npy')
 
 train(features, labels)
 
