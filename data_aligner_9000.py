@@ -1,4 +1,4 @@
-import torch
+#import torch
 import test
 import os
 import numpy as np
@@ -93,9 +93,9 @@ def label_stress(sample_dict:dict, time_dict:dict, bad_keys=['f07', "f14_a", "f1
                 for i in range(length):
                     if i == current_dict["tags"][next_tag]:
                         #set_number = (next_tag-2) * ((next_tag) % 2)
-                        set_number = next_tag % 2 #1 if during test, otherwise 0
+                        set_number = (next_tag) % 2 #1 if during test, otherwise 0
                         if i != current_dict["tags"][13]: next_tag += 1
-                    new_array[i] = int((set_number+1)/2)#int(set_number/2)
+                    new_array[i] = int(set_number)#int((set_number+1)/2)#int(set_number/2)
             else:
                 next_tag = 2
                 #label = 0
@@ -103,9 +103,9 @@ def label_stress(sample_dict:dict, time_dict:dict, bad_keys=['f07', "f14_a", "f1
                 for i in range(length):
                     if i == current_dict["tags"][next_tag]:
                         # set_number = (next_tag) * ((next_tag+1) % 2) #Multiplied by 0 if inbetween two sets
-                        set_number = next_tag+1 % 2 #1 if during test, otherwise 0
+                        set_number = (next_tag+1) % 2 #1 if during test, otherwise 0
                         next_tag += 1
-                    new_array[i] = int(set_number/2)
+                    new_array[i] = int(set_number)#int(set_number/2)
             result[subject] = new_array
     return result
 
