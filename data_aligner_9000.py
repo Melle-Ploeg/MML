@@ -6,7 +6,7 @@ import time
 
 # Take the data and time dictionaries for a single sample or experiment, and resample to align with the lowest sampled data (HR)
 def align_features(sample_dict:dict, time_dict:dict):
-    features = ['HR', 'EDA', 'EDA_std', 'BVP', 'TEMP', 'ACC', 'ACC_std']  # Features to align
+    features = ['HR', 'EDA', 'EDA_std', 'BVP', 'TEMP', 'ACC']#, 'ACC_std']  # Features to align
     time_array = time_dict['HR']
     length = len(time_array)    # Scale everything to the length of the HR array
     result = np.zeros((length, len(features)))      # Create empty feature matrix, with one column for each feature
@@ -22,7 +22,7 @@ def align_features(sample_dict:dict, time_dict:dict):
         result[i][4] = find_avg(time_array[i], np.ravel(sample_dict['TEMP']), np.ravel(time_dict['TEMP']), 4)
 
         result[i][5] = find_avg(time_array[i], np.ravel(sample_dict['ACCB']), np.ravel(time_dict['ACCB']), 64)
-        result[i][6] = find_std(time_array[i], np.ravel(sample_dict['ACCB']), np.ravel(time_dict['ACCB']), 64)
+        #result[i][6] = find_std(time_array[i], np.ravel(sample_dict['ACCB']), np.ravel(time_dict['ACCB']), 64)
 
 
     print(time.time() - start)

@@ -7,7 +7,7 @@ import random
 from data_aligner_9000 import align_features, align_all, label_stress, label_aerobic, label_anaerobic, get_features
 
 # Returns array of tuples: each tuple is a block, with first element matrix of features and second a vector of labels
-def generate_samples():
+def generate_samples(seq_length, block_multiplier=1):
     random.seed(234567)
     signal_data, time_data, fs_dict, participants = get_features()
     fs_dict = fs_dict['AEROBIC']['f01'] # Sampling frequencies are the same for every experiment so we simplify the dict
@@ -47,14 +47,14 @@ def generate_samples():
                 start_point = signal_data[method][subject]["tags"][1]
                 if "S" in subject:
                     end_point = signal_data[method][subject]["tags"][13]
-                    block_count = 2
+                    block_count = 2*block_multiplier
                 else:
                     end_point = signal_data[method][subject]["tags"][9]
-                    block_count = 3
+                    block_count = 3*block_multiplier
             elif method == "AEROBIC":
                 end_point = signal_data[method][subject]["tags"][-1]
                 if "S" in subject :
-                    block_count = 2
+                    block_count = 2*block_multiplier
                     start_point = signal_data[method][subject]["tags"][1] #The first tag, plus some bonus time where the subject is not exercising yet.
                 else: 
                     block_count = 1
@@ -67,24 +67,24 @@ def generate_samples():
             else:           
                 end_point = signal_data[method][subject]["tags"][-1]
                 if "S" in subject : 
-                    block_count = 1
+                    block_count = 1*block_multiplier
                     start_point = signal_data[method][subject]["tags"][1] - 100
                 else: 
-                    block_count = 2
+                    block_count = 2*block_multiplier
                     start_point = signal_data[method][subject]["tags"][1]
-            end_point -= 500
+            end_point -= seq_length
 
             indices = [start_point, end_point]
             indices.extend(np.random.uniform(start_point, end_point, block_count))
 
             for i in indices:
                 i_int = int(i)
-                sample_features = features[i_int:i_int+500]
-                if sample_features.shape[0] != 500:
+                sample_features = features[i_int:i_int+seq_length]
+                if sample_features.shape[0] != seq_length:
                     print(method, subject, i)     #For when something goes wrong
                 
-                sample_labels = np.zeros((500, 4))
-                for j in range(500):
+                sample_labels = np.zeros((seq_length, 4))
+                for j in range(seq_length):
                     #print(labels[subject][i_int + j])
                     sample_labels[j][int(labels[subject][i_int + j])] = 1
 
@@ -127,11 +127,13 @@ def store_samples(samples, sample_length, features, classes, addition=""):
 # labels = label_anaerobic(signal_data['ANAEROBIC'], time_data['ANAEROBIC'], bad_keys)
 
 
+feature_count=6
+seq_length = 60
 
-train_samples, test_samples, val_samples = generate_samples()
-store_samples(train_samples, 500, 7, 4, "_train")
-store_samples(test_samples, 500, 7, 4, "_test")
-store_samples(val_samples, 500, 7, 4, "_val")
+train_samples, test_samples, val_samples = generate_samples(seq_length, block_multiplier=10)
+store_samples(train_samples, seq_length, feature_count, 4, "_train_60")
+store_samples(test_samples, seq_length, feature_count, 4, "_test_60")
+store_samples(val_samples, seq_length, feature_count, 4, "_val_60")
 
 # print(samples[int(np.random.uniform(0, len(samples)))])
 # print(samples[int(np.random.uniform(0, len(samples)))])
