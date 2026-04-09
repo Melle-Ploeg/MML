@@ -47,17 +47,17 @@ def generate_samples(seq_length, block_multiplier=1):
                 start_point = signal_data[method][subject]["tags"][1]
                 if "S" in subject:
                     end_point = signal_data[method][subject]["tags"][13]
-                    block_count = 2*block_multiplier
+                    block_count = 5*block_multiplier #2
                 else:
                     end_point = signal_data[method][subject]["tags"][9]
-                    block_count = 3*block_multiplier
+                    block_count = 6*block_multiplier #3
             elif method == "AEROBIC":
                 end_point = signal_data[method][subject]["tags"][-1]
                 if "S" in subject :
                     block_count = 2*block_multiplier
                     start_point = signal_data[method][subject]["tags"][1] #The first tag, plus some bonus time where the subject is not exercising yet.
                 else: 
-                    block_count = 1
+                    block_count = 1*block_multiplier
                     if subject == 'f02':
                         start_point = signal_data[method][subject]["tags"][1]   #This one without the moment of idleness, because f02 started the test more quickly
                     else:
@@ -128,12 +128,12 @@ def store_samples(samples, sample_length, features, classes, addition=""):
 
 
 feature_count=6
-seq_length = 60
+seq_length = 500
 
-train_samples, test_samples, val_samples = generate_samples(seq_length, block_multiplier=10)
-store_samples(train_samples, seq_length, feature_count, 4, "_train_60")
-store_samples(test_samples, seq_length, feature_count, 4, "_test_60")
-store_samples(val_samples, seq_length, feature_count, 4, "_val_60")
+train_samples, test_samples, val_samples = generate_samples(seq_length)#, block_multiplier=10)
+store_samples(train_samples, seq_length, feature_count, 4, "_train")
+store_samples(test_samples, seq_length, feature_count, 4, "_test")
+store_samples(val_samples, seq_length, feature_count, 4, "_val")
 
 # print(samples[int(np.random.uniform(0, len(samples)))])
 # print(samples[int(np.random.uniform(0, len(samples)))])
