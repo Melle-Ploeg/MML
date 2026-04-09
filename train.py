@@ -35,15 +35,16 @@ def train(X_train, y_train, X_test, y_test):
 
     loader = data.DataLoader(data.TensorDataset(X_train, y_train), shuffle=True, batch_size=8)
     # Define model parameters
-    input_size = 7
+    input_size = 6
 
-    hidden_size = 32
+    hidden_size = 64
     num_layers = 2
     output_size = 4
     model = ManyToManyLSTM(input_size, hidden_size, num_layers, output_size)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+    scaler = torch.amp.GradScaler()
 
     # Train the model
     n_epochs = 2000
@@ -54,8 +55,10 @@ def train(X_train, y_train, X_test, y_test):
             # y_pred = torch.squeeze(y_pred, 2)
             loss = criterion(y_pred, y_batch)
             optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+            #optimizer.step()
         # Validation
         if epoch % 100 != 0:
             continue
@@ -66,13 +69,11 @@ def train(X_train, y_train, X_test, y_test):
             print(y_pred[10, 100, :])
             print(y_train[10, 100, :])
             # y_pred = torch.squeeze(y_pred, 2)
-            train_loss = np.sqrt(criterion(y_pred, y_train))
+            train_loss = criterion(y_pred, y_train)
             y_pred = model(X_test)
             # y_pred = torch.squeeze(y_pred, 2)
-            test_loss = np.sqrt(criterion(y_pred, y_test))
+            test_loss = criterion(y_pred, y_test)
         print("Epoch %d: train :̶.̶|̶ ̶:̶;̶ %.4f, test :̶.̶|̶ ̶:̶;̶ %.4f" % (epoch, train_loss, test_loss))
-
-
 
 
 X_train = np.load('processed_data/features_train.npy')
