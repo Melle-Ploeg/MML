@@ -27,7 +27,7 @@ class ManyToManyLSTM(nn.Module):
 
 def acc(pred, real):
     _, pred = torch.topk(pred, k=1, dim=1)
-    _, real = torch.topk(real, k=1, dim=1)
+    # _, real = torch.topk(real, k=1, dim=1)
     is_correct = (pred == real).long()
     return sum(is_correct)/len(pred)
 
@@ -41,15 +41,15 @@ def train(X_train, y_train, X_test, y_test):
     X_test = torch.tensor(X_test, dtype=torch.float32)
     y_test = torch.tensor(y_test, dtype=torch.float32)
 
-    y_train = y_train[:, -1, :]
-    y_test = y_test[:, -1, :]
+    # y_train = y_train[:, -1, :]
+    # y_test = y_test[:, -1, :]
 
-    _, y_test = torch.topk(y_test, k=1, dim=1)
-    y_test = y_test.squeeze(1)
+    # _, y_test = torch.topk(y_test, k=1, dim=1)
+    # y_test = y_test.squeeze(1)
 
     loader = data.DataLoader(data.TensorDataset(X_train, y_train), shuffle=True, batch_size=8)
     # Define model parameters
-    input_size = 6
+    input_size = 5
 
     hidden_size = 32
     num_layers = 2
@@ -68,11 +68,11 @@ def train(X_train, y_train, X_test, y_test):
         for X_batch, y_batch in loader:
             optimizer.zero_grad()
             y_pred = model(X_batch)
-            _, y_batch = torch.topk(y_batch, k=1, dim=1)
-            y_batch = y_batch.squeeze(1)
+            # _, y_batch = torch.topk(y_batch, k=1, dim=1)
+            # y_batch = y_batch.squeeze(1)
             # y_pred = torch.squeeze(y_pred, 2)
-            # print(y_pred.shape)
-            # print(y_batch.shape)
+            print(y_pred.shape)
+            print(y_batch.shape)
             loss = criterion(y_pred, y_batch)
             loss.backward()
             optimizer.step()
@@ -100,10 +100,16 @@ def train(X_train, y_train, X_test, y_test):
 
 
 
-X_train = np.load('processed_data/features_train_60.npy')
-y_train = np.load('processed_data/labels_train_60.npy')
+X_train = np.load('processed_data/features_train-v2.npy')
+y_train = np.load('processed_data/labels_train-v2.npy')
 
-X_test = np.load('processed_data/features_test_60.npy')
-y_test = np.load('processed_data/labels_test_60.npy')
+X_test = np.load('processed_data/features_test-v2.npy')
+y_test = np.load('processed_data/labels_test-v2.npy')
+
+print(y_test.shape)
+# print(y_test[0,0,:])
+
+X_train = X_train[:,:,[0,1,2,3,5]]
+X_test = X_test[:,:,[0,1,2,3,5]]
 
 train(X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test)
