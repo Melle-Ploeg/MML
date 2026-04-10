@@ -44,6 +44,9 @@ def train(X_train, y_train, X_test, y_test):
     y_train = y_train[:, -1, :]
     y_test = y_test[:, -1, :]
 
+    _, y_test = torch.topk(y_test, k=1, dim=1)
+    y_test = y_test.squeeze(1)
+
     loader = data.DataLoader(data.TensorDataset(X_train, y_train), shuffle=True, batch_size=8)
     # Define model parameters
     input_size = 6
@@ -65,6 +68,8 @@ def train(X_train, y_train, X_test, y_test):
         for X_batch, y_batch in loader:
             optimizer.zero_grad()
             y_pred = model(X_batch)
+            _, y_batch = torch.topk(y_batch, k=1, dim=1)
+            y_batch = y_batch.squeeze(1)
             # y_pred = torch.squeeze(y_pred, 2)
             # print(y_pred.shape)
             # print(y_batch.shape)
