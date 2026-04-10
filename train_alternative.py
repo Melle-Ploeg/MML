@@ -27,19 +27,20 @@ class ManyToManyLSTM(nn.Module):
 
 def acc(pred, real):
     _, pred = torch.topk(pred, k=1, dim=1)
+    pred = pred.squeeze(1)
     # _, real = torch.topk(real, k=1, dim=1)
     is_correct = (pred == real).long()
     return sum(is_correct)/len(pred)
 
 
 # Take a matrix of all the labeled input data
-def train(X_train, y_train, X_test, y_test):
+def train(X_train, y_train, X_test, y_test, batch_size=8):
     X_train = torch.tensor(X_train, dtype=torch.float32)
-    y_train = torch.tensor(y_train, dtype=torch.float32)
+    y_train = torch.tensor(y_train, dtype=torch.long)
     # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
     # X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2)
     X_test = torch.tensor(X_test, dtype=torch.float32)
-    y_test = torch.tensor(y_test, dtype=torch.float32)
+    y_test = torch.tensor(y_test, dtype=torch.long)
 
     # y_train = y_train[:, -1, :]
     # y_test = y_test[:, -1, :]
@@ -47,18 +48,18 @@ def train(X_train, y_train, X_test, y_test):
     # _, y_test = torch.topk(y_test, k=1, dim=1)
     # y_test = y_test.squeeze(1)
 
-    loader = data.DataLoader(data.TensorDataset(X_train, y_train), shuffle=True, batch_size=8)
+    loader = data.DataLoader(data.TensorDataset(X_train, y_train), shuffle=True, batch_size=batch_size)
     # Define model parameters
     input_size = 5
 
-    hidden_size = 32
+    hidden_size = 256
     num_layers = 2
-    output_size = 4
+    output_size = 3
     model = ManyToManyLSTM(input_size, hidden_size, num_layers, output_size)
 
     criterion = nn.CrossEntropyLoss()
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
     # h0, c0 = None, None
     # Train the model
@@ -71,8 +72,6 @@ def train(X_train, y_train, X_test, y_test):
             # _, y_batch = torch.topk(y_batch, k=1, dim=1)
             # y_batch = y_batch.squeeze(1)
             # y_pred = torch.squeeze(y_pred, 2)
-            print(y_pred.shape)
-            print(y_batch.shape)
             loss = criterion(y_pred, y_batch)
             loss.backward()
             optimizer.step()
@@ -89,22 +88,23 @@ def train(X_train, y_train, X_test, y_test):
             # y_pred = torch.squeeze(y_pred, 2)
             train_loss = criterion(y_pred, y_train)
             y_pred = model(X_test)
+            print(y_pred.shape)
             # y_pred = torch.squeeze(y_pred, 2)
-            print(acc(y_pred, y_test))
             test_loss = criterion(y_pred, y_test)
             for i in range(y_pred.shape[0]):
                 print(y_test[i])
                 print(y_pred[i])
+            print(acc(y_pred, y_test))
         print("Epoch %d: train :̶.̶|̶ ̶:̶;̶ %.4f, test :̶.̶|̶ ̶:̶;̶ %.4f" % (epoch, train_loss, test_loss))
 
 
+batch_size = 16
 
+X_train = np.load('processed_data/features_train-v2_upsampled.npy')
+y_train = np.load('processed_data/labels_train-v2_upsampled.npy')
 
-X_train = np.load('processed_data/features_train-v2.npy')
-y_train = np.load('processed_data/labels_train-v2.npy')
-
-X_test = np.load('processed_data/features_test-v2.npy')
-y_test = np.load('processed_data/labels_test-v2.npy')
+X_test = np.load('processed_data/features_test-v2_upsampled.npy')
+y_test = np.load('processed_data/labels_test-v2_upsampled.npy')
 
 print(y_test.shape)
 # print(y_test[0,0,:])
@@ -112,4 +112,4 @@ print(y_test.shape)
 X_train = X_train[:,:,[0,1,2,3,5]]
 X_test = X_test[:,:,[0,1,2,3,5]]
 
-train(X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test)
+train(X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test, batch_size=batch_size)
