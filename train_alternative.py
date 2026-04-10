@@ -10,11 +10,11 @@ import torch.utils.data as data
 
 
 class ManyToManyLSTM(nn.Module):
-    def __init__(self, input_size, hidden_dim, num_layers, output_size):
+    def __init__(self, input_size, hidden_dim, num_layers, output_size, device):
         self.hidden_dim = hidden_dim
         self.layer_dim = num_layers
         super(ManyToManyLSTM, self).__init__()
-        self.lstm = nn.LSTM(input_size, hidden_dim, num_layers, batch_first=True)
+        self.lstm = nn.LSTM(input_size, hidden_dim, num_layers, batch_first=True, device=device)
         self.fc = nn.Linear(hidden_dim, output_size)
         self.softAct = nn.Softmax(dim=1)
 
@@ -34,13 +34,13 @@ def acc(pred, real):
 
 
 # Take a matrix of all the labeled input data
-def train(X_train, y_train, X_test, y_test, batch_size=8):
-    X_train = torch.tensor(X_train, dtype=torch.float32)
-    y_train = torch.tensor(y_train, dtype=torch.long)
+def train(X_train, y_train, X_test, y_test, device, batch_size=8):
+    X_train = torch.tensor(X_train, dtype=torch.float32, device=device)
+    y_train = torch.tensor(y_train, dtype=torch.long, device=device)
     # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
     # X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2)
-    X_test = torch.tensor(X_test, dtype=torch.float32)
-    y_test = torch.tensor(y_test, dtype=torch.long)
+    X_test = torch.tensor(X_test, dtype=torch.float32, device=device)
+    y_test = torch.tensor(y_test, dtype=torch.long, device=device)
 
     # y_train = y_train[:, -1, :]
     # y_test = y_test[:, -1, :]
@@ -53,9 +53,10 @@ def train(X_train, y_train, X_test, y_test, batch_size=8):
     input_size = 5
 
     hidden_size = 256
-    num_layers = 2
+    num_layers = 3
     output_size = 3
-    model = ManyToManyLSTM(input_size, hidden_size, num_layers, output_size)
+    model = ManyToManyLSTM(input_size, hidden_size, num_layers, output_size, device)
+    model.to(device)
 
     criterion = nn.CrossEntropyLoss()
 
@@ -111,5 +112,6 @@ print(y_test.shape)
 
 X_train = X_train[:,:,[0,1,2,3,5]]
 X_test = X_test[:,:,[0,1,2,3,5]]
+device = torch.device("cuda")
 
-train(X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test, batch_size=batch_size)
+train(X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test, batch_size=batch_size, device=device)
