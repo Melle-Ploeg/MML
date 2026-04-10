@@ -88,9 +88,6 @@ def generate_samples(seq_length, stressFree = 5, stressFull = 5, anaerobic = 5, 
                 else: 
                     indices = indices_control
                     block_count = block_count_cont
-                
-                if subject == "S01":
-                    print(indices, i, j)
 
                 for i in np.random.uniform(0, len(indices)-1, block_count):
                     i_int = int(i)
@@ -109,20 +106,23 @@ def generate_samples(seq_length, stressFree = 5, stressFull = 5, anaerobic = 5, 
                         val_samples.append((sample_features, sample_label*j))
                     else:
                         train_samples.append((sample_features, sample_label*j))
+    print(train_samples[0][1])
+    # for i in list(np.random.uniform(0, len(train_samples), 6)):
+    #     print(train_samples[int(i)][1])
     return train_samples, test_samples, val_samples
 
-def store_samples(samples, sample_length, features, classes, addition=""):
+def store_samples(samples, sample_length, features, addition=""):
     print('Writing ', len(samples), ' samples')
 
     feature_matrix = np.empty((len(samples), sample_length, features))
-    label_matrix = np.empty((len(samples), sample_length, classes))
-
+    label_vector = np.empty(len(samples))
     for i in range(len(samples)):
         feature_matrix[i] = samples[i][0]
-        label_matrix[i] = samples[i][1]
+        label_vector[i] = samples[i][1]
 
+    print(label_vector)
     np.save("processed_data/features" + addition, feature_matrix, allow_pickle=False)
-    np.save("processed_data/labels" + addition, label_matrix, allow_pickle=False)
+    np.save("processed_data/labels" + addition, label_vector, allow_pickle=False)
 
 # signal_data, time_data, fs_dict, participants = get_features()
 #
@@ -148,9 +148,9 @@ anaerobic = 5
 anaerobicChill = 5
 
 train_samples, test_samples, val_samples = generate_samples(seq_length, stressFree=stressFree, stressFull=stressFull, anaerobic=anaerobic, anaerobicChill=anaerobicChill)
-store_samples(train_samples, seq_length, feature_count, 4, "_train-v2")
-store_samples(test_samples, seq_length, feature_count, 4, "_test-v2")
-store_samples(val_samples, seq_length, feature_count, 4, "_val-v2")
+store_samples(train_samples, seq_length, feature_count, "_train-v2")
+store_samples(test_samples, seq_length, feature_count, "_test-v2")
+store_samples(val_samples, seq_length, feature_count, "_val-v2")
 
 # print(samples[int(np.random.uniform(0, len(samples)))])
 # print(samples[int(np.random.uniform(0, len(samples)))])
