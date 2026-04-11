@@ -144,14 +144,14 @@ feature_count=6
 seq_length = 60
 
 stressFull = 40
-stressFree = 20
+stressFree = 40
 anaerobic = 40
-anaerobicChill = 20
+anaerobicChill = 0#20
 
 train_samples, test_samples, val_samples = generate_samples(seq_length, stressFree=stressFree, stressFull=stressFull, anaerobic=anaerobic, anaerobicChill=anaerobicChill)
-store_samples(train_samples, seq_length, feature_count, "_train-v2_upsampled")
-store_samples(test_samples, seq_length, feature_count, "_test-v2_upsampled")
-store_samples(val_samples, seq_length, feature_count, "_val-v2_upsampled")
+store_samples(train_samples, seq_length, feature_count, "_train-v2_onlyStrest")
+store_samples(test_samples, seq_length, feature_count, "_test-v2_onlyStrest")
+store_samples(val_samples, seq_length, feature_count, "_val-v2_onlyStrest")
 
 # print(samples[int(np.random.uniform(0, len(samples)))])
 # print(samples[int(np.random.uniform(0, len(samples)))])
