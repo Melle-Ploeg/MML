@@ -142,10 +142,11 @@ def store_samples(samples, sample_length, features, addition=""):
 
 feature_count=6
 seq_length = 60
-stressFree = 15
-stressFull = 30
-anaerobic = 30
-anaerobicChill = 15
+
+stressFull = 40
+stressFree = 20
+anaerobic = 40
+anaerobicChill = 20
 
 train_samples, test_samples, val_samples = generate_samples(seq_length, stressFree=stressFree, stressFull=stressFull, anaerobic=anaerobic, anaerobicChill=anaerobicChill)
 store_samples(train_samples, seq_length, feature_count, "_train-v2_upsampled")
