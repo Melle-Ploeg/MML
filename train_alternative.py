@@ -10,13 +10,13 @@ import torch.utils.data as data
 from ignite import metrics
 
 
-class ManyToManyLSTM(nn.Module):
+class ManyToOneLSTM(nn.Module):
     def __init__(self, input_size, hidden_dim, num_layers, output_size, device):
         self.hidden_dim = hidden_dim
         self.layer_dim = num_layers
-        super(ManyToManyLSTM, self).__init__()
+        super(ManyToOneLSTM, self).__init__()
         self.lstm = nn.LSTM(input_size, hidden_dim, num_layers, batch_first=True, device=device, dropout=0.1)
-        self.lstm2 = nn.LSTM(hidden_dim, int(hidden_dim/2), num_layers, batch_first=True, device=device, dropout=0.1)
+        self.lstm2 = nn.LSTM(hidden_dim, int(hidden_dim/2), 1, batch_first=True, device=device, dropout=0.1)
         self.fc = nn.Linear(int(hidden_dim/2), output_size)
         self.softAct = nn.Softmax(dim=1)
 
@@ -55,20 +55,20 @@ def train(X_train, y_train, X_test, y_test, device, batch_size=8):
     # Define model parameters
     input_size = 5
 
-    hidden_size = 256
+    hidden_size = 64
     num_layers = 1
     output_size = 3
-    model = ManyToManyLSTM(input_size, hidden_size, num_layers, output_size, device)
+    model = ManyToOneLSTM(input_size, hidden_size, num_layers, output_size, device)
     model.to(device)
 
     criterion = nn.CrossEntropyLoss()
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.0001, momentum=0.90, weight_decay=1e-5)#, nesterov=True)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.90, weight_decay=1e-5)#, nesterov=True)
 
     # h0, c0 = None, None
     # Train the model
     topAcc = 0
-    n_epochs = 2000
+    n_epochs = 200
     accuracies = metrics.Accuracy()
     recall = metrics.Recall()
     confusion_matrix = metrics.ConfusionMatrix(output_size)
@@ -88,12 +88,11 @@ def train(X_train, y_train, X_test, y_test, device, batch_size=8):
         if epoch % 10 != 0:
             continue
         model.eval()
+        
+        confusion_matrix.reset()
         with torch.no_grad():
             accuracies.reset()
             y_pred = model(X_train)
-            # print(y_pred.shape, y_train.shape)
-            # print(y_pred[10, 100, :])
-            # print(y_train[10, 100, :])
             # y_pred = torch.squeeze(y_pred, 2)
             train_loss = criterion(y_pred, y_train)
             y_pred = model(X_test)
@@ -101,9 +100,8 @@ def train(X_train, y_train, X_test, y_test, device, batch_size=8):
             # y_pred = torch.squeeze(y_pred, 2)
             test_loss = criterion(y_pred, y_test)
 
-            for i in range(y_pred.shape[0]):
-                print(y_test[i])
-                print(y_pred[i])
+            print(y_test[-1])
+            print(y_pred[-1])
             accuracies.update((y_pred, y_test))
             current_acc = accuracies.compute() #acc(y_pred, y_test)
 
@@ -114,39 +112,32 @@ def train(X_train, y_train, X_test, y_test, device, batch_size=8):
             current_recall = recall.compute()
             print("recall:", current_recall)
 
-            if(current_acc > topAcc):
-                print("Found new best model!")
-                confusion_matrix.reset()
-                confusion_matrix.update((y_pred, y_test))
-                top_confusion = confusion_matrix.compute()
-                top_recall = current_recall
-                # top_recall = current_recall
-                # print("Accuracy:", current_acc)
-                # print("Recall:", top_recall)
-                print("Confusion matrix: ", top_confusion)
-                topAcc = current_acc
-                torch.save(model.state_dict, "./models/best_model"+str(topAcc)+".pt")
+            confusion_matrix.update((y_pred, y_test))
+            
 
 
         print("Epoch %d: train :̶.̶|̶ ̶:̶;̶ %.4f, test :̶.̶|̶ ̶:̶;̶ %.4f" % (epoch, train_loss, test_loss))
-    print("Accuracy:", topAcc)
-    print("Recall:", top_recall)
-    print("Confusion matrix: ", top_confusion)
+    print("Accuracy:", current_acc)
 
+    confusion = confusion_matrix.compute()
+    print("Confusion matrix: ", confusion)
+    topAcc = current_acc
+    torch.save(model.state_dict(), "./models/best_model"+str(topAcc)+".pt")
 
-batch_size = 256
+if __name__ == "__main__":
+    batch_size = 256
 
-X_train = np.load('processed_data/features_train-v2_onlyStrest.npy')
-y_train = np.load('processed_data/labels_train-v2_onlyStrest.npy')
+    X_train = np.load('processed_data/features_train-v2_onlyStrest.npy')
+    y_train = np.load('processed_data/labels_train-v2_onlyStrest.npy')
 
-X_test = np.load('processed_data/features_test-v2_onlyStrest.npy')
-y_test = np.load('processed_data/labels_test-v2_onlyStrest.npy')
+    X_test = np.load('processed_data/features_test-v2_onlyStrest.npy')
+    y_test = np.load('processed_data/labels_test-v2_onlyStrest.npy')
 
-print(y_test.shape)
-# print(y_test[0,0,:])
+    print(y_test.shape)
+    # print(y_test[0,0,:])
 
-X_train = X_train[:,:,[0,1,2,3,5]]
-X_test = X_test[:,:,[0,1,2,3,5]]
-device = torch.device("cuda")
+    X_train = X_train[:,:,[0,1,2,3,5]]
+    X_test = X_test[:,:,[0,1,2,3,5]]
+    device = torch.device("cuda")
 
-train(X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test, batch_size=batch_size, device=device)
+    train(X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test, batch_size=batch_size, device=device)

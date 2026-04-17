@@ -25,8 +25,7 @@ class ManyToManyLSTM(nn.Module):
         return out
 
 def acc(pred, real):
-    _, pred = torch.topk(pred, k=1, dim=2)
-    _, real = torch.topk(real, k=1, dim=2)
+    _, pred = torch.topk(pred, k=1, dim=1)
     sample_accs = []
     for i in range(pred.shape[0]):
         is_correct = (pred[i] == real[i]).long()
@@ -65,6 +64,14 @@ def train(X_train, y_train, X_test, y_test):
     loader = data.DataLoader(data.TensorDataset(X_train, y_train), shuffle=True, batch_size=16)
     # y_train = torch.cat(y_train.unbind())
     y_train = y_train.transpose(1, 2)
+
+    print(y_test.shape)
+
+    #Calculate class imbalance
+    classes = np.zeros(4)
+    for i in y_test.view(y_test.shape[0]*y_test.shape[1]):
+        classes[i] += 1
+    print(classes)
 
     # Define model parameters
     input_size = 6
@@ -112,28 +119,39 @@ def train(X_train, y_train, X_test, y_test):
             y_pred = y_pred.transpose(1, 2)
             # y_pred = torch.squeeze(y_pred, 2)
             # for i in np.random.uniform(0, y_pred.shape[2], 40):
-            for i in range(y_pred.shape[2]):
-                print(y_test[10, int(i)])
-                print(y_pred[10, :, int(i)])
+            # for i in range(y_pred.shape[2]):
+            #     print(y_test[10, int(i)])
+            #     print(y_pred[10, :, int(i)])
 
 
-            print(y_test.shape)
-            print(y_pred.shape)
-            # for i in np.random.uniform(0, y_test.shape[2], 40):
-            #     print(y_test[2,:,int(i)])
+            # print(y_test.shape)
+            # print(y_pred.shape)
+            # for i in np.random.uniform(0, y_test.shape[1], 40):
+            #     print(y_test[2,int(i)])
             #     print(y_pred[2,:,int(i)])
 
-            # print(acc(y_pred, y_test))
+            print(acc(y_pred, y_test))
             test_loss = criterion(y_pred, y_test)
         print("Epoch %d: train :̶.̶|̶ ̶:̶;̶ %.4f, test :̶.̶|̶ ̶:̶;̶ %.4f" % (epoch, train_loss, test_loss))
 
 
 
+# X_train = np.load('processed_data/features_train.npy')
+# y_train = np.load('processed_data/labels_train.npy')
 
-X_train = np.load('processed_data/features_train.npy')
-y_train = np.load('processed_data/labels_train.npy')
+# X_test = np.load('processed_data/features_test.npy')
+# y_test = np.load('processed_data/labels_test.npy')
 
-X_test = np.load('processed_data/features_test.npy')
-y_test = np.load('processed_data/labels_test.npy')
+X_train = np.load('processed_data/features_train_OnlyStress.npy')
+y_train = np.load('processed_data/labels_train_OnlyStress.npy')
+
+X_test = np.load('processed_data/features_test_OnlyStress.npy')
+y_test = np.load('processed_data/labels_test_OnlyStress.npy')
+
+# X_train = np.load('processed_data/features_train_noStress.npy')
+# y_train = np.load('processed_data/labels_train_noStress.npy')
+
+# X_test = np.load('processed_data/features_test_noStress.npy')
+# y_test = np.load('processed_data/labels_test_noStress.npy')
 
 train(X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test)

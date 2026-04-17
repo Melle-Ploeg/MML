@@ -194,39 +194,3 @@ def align_all(sample_dict, time_dict):
     for subject in sample_dict.keys():
         result[subject] = align_features(sample_dict[subject], time_dict[subject])
     return result
-
-
-# signal_data, time_data, fs_dict, participants = get_features()
-# fs_dict = fs_dict['AEROBIC']['f01'] # Sampling frequencies are the same for every experiment so we simplify the dict
-#
-# print(signal_data['AEROBIC']['f02']['tags'])
-# print(len(signal_data['AEROBIC']['f02']['HR']))
-# print(signal_data['AEROBIC']['f07']['tags'])
-# print(len(signal_data['AEROBIC']['f07']['HR']))
-# print(signal_data['AEROBIC']['f11']['tags'])
-# print(len(signal_data['AEROBIC']['f11']['HR']))
-# print(signal_data['AEROBIC']['f03']['tags'])
-# print(len(signal_data['AEROBIC']['f03']['HR']))
-#TODO TEMPRARY CODE VERY TEMPORATY
-
-# subject = "S01"
-
-# features = align_features(signal_data['STRESS'][subject], time_data['STRESS'][subject])
-# labels = label_stress(signal_data['STRESS'], time_data['STRESS'])[subject]
-
-
-# print(features.shape)
-# print(labels.shape)
-# with np.printoptions(edgeitems=4000):
-#     print(labels)
-
-# print(features.shape)
-# print(features)
-
-#np.set_printoptions(threshold=np.inf)
-#test_dict = {'f01':features}
-# print(label_anaerobic(test_dict, signal_data['ANAEROBIC'])['f01'])
-
-# for s in signal_data['ANAEROBIC'].keys():
-#     print(s)
-#     print(signal_data['ANAEROBIC'][s]['tags'])
